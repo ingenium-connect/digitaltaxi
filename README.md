@@ -1,2 +1,2 @@
 # digitaltaxi
-Project aimed to enable buy motor policies on a daily basis
+Software product aimed to enable digital taxi drivers buy motor policies on a daily basis
