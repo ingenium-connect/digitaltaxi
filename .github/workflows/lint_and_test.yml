@@ -2,68 +2,76 @@ name: Linting and Testing
 
 on: [push]
 
-env:
-  AIT_API_KEY: ${{ secrets.AIT_API_KEY }}
-  AIT_USERNAME: ${{ secrets.AIT_USERNAME }}
-  ORYX_PROVIDER_CHANNEL: ${{ secrets.ORYX_PROVIDER_CHANNEL }}
-
 concurrency:
   group: lint-and-test
 
 jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.60
+        timeout-minutes: 60
+
   lint_and_test:
+    needs: [golangci]
     strategy:
       matrix:
-        go-version: [1.17.x]
+        go-version: [1.23.x]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 80
     steps:
-      - uses: actions/checkout@v3
-      - uses: google-github-actions/setup-gcloud@v0
-        with:
-          project_id: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
-          service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-          export_default_credentials: true
+      - uses: actions/checkout@v4
       - name: Install Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
 
-      - uses: dominikh/staticcheck-action@v1.2.0
-        with:
-          version: "2022.1.1" 
-          install-go: false
-          cache-key: ${{ matrix.go-version }}
-
-      - name: Install Go and Dependencies
+      - name: Install Go dependencies
         run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.37.1
-          go get -u github.com/kisielk/errcheck
-          go get -u honnef.co/go/tools/cmd/staticcheck
-          go get -u golang.org/x/lint/golint
-          go get -u github.com/axw/gocov/gocov
-          go get -u github.com/securego/gosec/cmd/gosec
-          go get -u github.com/ory/go-acc
-          go get -u github.com/client9/misspell/cmd/misspell
-          go get -u github.com/gordonklaus/ineffassign
-          go get github.com/fzipp/gocyclo
-          go get github.com/stretchr/testify/assert
+          go mod download
+          go get github.com/axw/gocov/gocov
           go get github.com/ory/go-acc
-          go get golang.org/x/oauth2/internal
+          go install github.com/ory/go-acc
+          go install github.com/axw/gocov/gocov
 
-      - name: Lint and Test code
+      - name: Run tests
         run: |
-          staticcheck ./...
-          go fmt $(go list ./... | grep -v /vendor/)
-          go vet $(go list ./... | grep -v /vendor/)
-          golint -set_exit_status $(go list ./... | grep -v /vendor/)
-          errcheck -ignore 'os:.*,' $(go list ./... | grep -v /vendor/)
-          misspell -error .
-          gosec -exclude=G304,G101 ./...
-          go-acc -o coverage.txt --ignore generated,cmd  ./... -- -timeout 60m
-          grep -v "generated.go" coverage.txt | grep -v "_gen.go" | grep -v "mocks.go" | grep -v "*resolver*go" | grep -v "server.go" > coverage.out
+          go-acc -o coverage.txt --ignore generated,cmd,graph  ./... -- -timeout 60m
+          grep -v "generated.go" coverage.txt | grep -v "_gen.go" | grep -v "_mock.go" | grep -v "*mock.go" | grep -v "mocks.go" | grep -v "*resolver*go" | grep -v "server.go" | grep -v "*.html" > coverage.out
           go tool cover -html=coverage.out -o coverage.html
           gocov convert coverage.out > coverage.json
           gocov report coverage.json > coverage_report.txt
           tail coverage_report.txt
+
+      - name: Install goveralls
+        run: go install github.com/mattn/goveralls@latest
+
+  push_to_registry:
+    name: Build and Push docker image to docker hub
+    if: ${{ github.ref == 'refs/heads/feature'}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: check repository
+        uses: actions/checkout@v4
+
+      - name: login to docker registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{secrets.DOCKERHUB_USERNAME}}
+          password: ${{secrets.DOCKERHUB_TOKEN}}
+
+      - name: build and push docker image to registry
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: digitaltaxi/payperday:latest

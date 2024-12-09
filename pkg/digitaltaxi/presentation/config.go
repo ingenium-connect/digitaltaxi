@@ -3,6 +3,7 @@ package presentation
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"regexp"
 	"time"
@@ -12,10 +13,12 @@ import (
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/application/common/helpers"
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/infrastructure"
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/infrastructure/datastore"
+	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/infrastructure/datastore/mongodb"
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/presentation/rest"
+	digitaltaxi "github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/usecases/payperday"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-const serverTimeoutSeconds = 120
 
 var allowedOriginPatterns = []string{
 	`^(https?://)?(.+)-?.ibima\.co.ke$`,
@@ -44,13 +47,14 @@ func PrepareServer(ctx context.Context, port int) {
 
 	err := StartGinRouter(ctx, ginEngine)
 	if err != nil {
-		helpers.LogStartupError(ctx, err)
+		msg := fmt.Sprintf("Could not start the router: %v", err)
+		log.Panic(msg)
 	}
 
 	addr := fmt.Sprintf(":%v", port)
 
 	if err := ginEngine.Run(addr); err != nil {
-		helpers.LogStartupError(ctx, err)
+		log.Panic(err)
 	}
 }
 
@@ -103,14 +107,41 @@ func StartGinRouter(ctx context.Context, engine *gin.Engine) error {
 		AllowWebSockets: true,
 	}))
 
-	datastore := datastore.NewDbService()
+	// ----------------DB CONFIGURATION ----------------//
+	options := &options.ClientOptions{}
+	options.ApplyURI(helpers.MustGetEnvVar("MONGODB_URI"))
 
-	infrastructure := infrastructure.NewInfrastructureInteractor(datastore)
-	_ = rest.NewPresentationHandlers(infrastructure)
+	client, err := mongo.Connect(ctx, options)
+	if err != nil {
+		log.Panicf("can't initialize mongodb when setting up profile service: %s", err)
+	}
 
-	_ = engine.Group("/api/v1")
+	defer func() {
+		if err = client.Disconnect(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	mongoDB := mongodb.NewMongoDBClient(client.Database(helpers.MustGetEnvVar("DATABASE_NAME")))
+
+	// --------- END OF MONGODB CONFIGURATION --------------------------------//
+
+	db := datastore.NewDB(mongoDB)
+
+	infrastructure := infrastructure.NewInfrastructureInteractor(db)
+
+	usecases := digitaltaxi.NewPayPerDay(infrastructure)
+
+	handlers := rest.NewPresentationHandlers(*usecases)
+
+	v1 := engine.Group("/api/v1")
+
+	coverTypes := v1.Group("cover-types")
 	{
-
+		coverTypes.POST("", handlers.CreateCoverType)
 	}
 
 	return nil

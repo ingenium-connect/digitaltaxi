@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"strconv"
 
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/application/common"
@@ -9,14 +10,12 @@ import (
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/presentation"
 )
 
-const waitSeconds = 30
-
 func main() {
 	ctx := context.Background()
 
 	port, err := strconv.Atoi(helpers.MustGetEnvVar(common.PortEnvVarName))
 	if err != nil {
-		helpers.LogStartupError(ctx, err)
+		log.Panicf("Could not get environment variable %s", helpers.MustGetEnvVar(common.PortEnvVarName))
 	}
 
 	presentation.PrepareServer(ctx, port)

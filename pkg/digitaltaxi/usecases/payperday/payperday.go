@@ -1,6 +1,11 @@
-package shortcode
+package payperday
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/application/dto"
+	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/domain"
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/infrastructure"
 )
 
@@ -14,4 +19,18 @@ func NewPayPerDay(infra infrastructure.Infrastructure) *PayPerDay {
 	return &PayPerDay{
 		infrastructure: infra,
 	}
+}
+
+func (p *PayPerDay) CreateCoverType(ctx context.Context, coverTypeInput *dto.CoverTypeInput) (*domain.CoverType, error) {
+	if !coverTypeInput.Type.IsValid() {
+		return nil, fmt.Errorf("cover type must be valid. Either TPO or COMPREHENSIVE")
+	}
+
+	coverType := &domain.CoverType{
+		Name: coverTypeInput.Name,
+		Code: coverTypeInput.Code,
+		Type: coverTypeInput.Type,
+	}
+
+	return p.infrastructure.Repository.CreateCoverType(ctx, coverType)
 }
