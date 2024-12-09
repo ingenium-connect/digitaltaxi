@@ -3,14 +3,9 @@ package mongodb
 import (
 	"context"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-// MongoDBClient defines the methods that we need from mongo db driver
-type MongoDBClient interface {
-	FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) *mongo.SingleResult
-}
 
 // MongoDBClientImpl is the implementation of MongoDBClient
 type MongoDBClientImpl struct {
@@ -25,6 +20,13 @@ func NewMongoDBClient(mn *mongo.Database) *MongoDBClientImpl {
 }
 
 // FindOne finds a single document matching the filter
-func (m *MongoDBClientImpl) FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) *mongo.SingleResult {
-	return m.client.Collection("").FindOne(ctx, filter, opts...)
+func (m *MongoDBClientImpl) CreateCoverType(ctx context.Context, collectionName string, coverType *CoverType) (*CoverType, error) {
+	result, err := m.client.Collection(collectionName).InsertOne(ctx, coverType)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CoverType{
+		ID: result.InsertedID.(primitive.ObjectID),
+	}, nil
 }

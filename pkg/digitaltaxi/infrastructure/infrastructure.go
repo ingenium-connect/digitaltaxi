@@ -6,14 +6,14 @@ import (
 
 // Infrastructure ...
 type Infrastructure struct {
-	DB *datastore.DbServiceImpl
+	Repository datastore.Repository
 }
 
 // NewInfrastructureInteractor initializes a new Infrastructure
 func NewInfrastructureInteractor(
-	db *datastore.DbServiceImpl,
+	repo datastore.Repository,
 ) Infrastructure {
 	return Infrastructure{
-		DB: db,
+		Repository: repo,
 	}
 }
