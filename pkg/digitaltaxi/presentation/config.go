@@ -116,15 +116,6 @@ func StartGinRouter(ctx context.Context, engine *gin.Engine) error {
 		log.Panicf("can't initialize mongodb when setting up profile service: %s", err)
 	}
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			panic(err)
-		}
-	}()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
 	mongoDB := mongodb.NewMongoDBClient(client.Database(helpers.MustGetEnvVar("DATABASE_NAME")))
 
 	// --------- END OF MONGODB CONFIGURATION --------------------------------//
