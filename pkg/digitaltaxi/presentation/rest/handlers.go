@@ -2,9 +2,11 @@ package rest
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/application/dto"
+	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/domain"
 	digitaltaxi "github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/usecases/payperday"
 )
 
@@ -41,6 +43,57 @@ func (h *PresentationHandlersImpl) CreateCoverType(c *gin.Context) {
 	c.JSON(http.StatusOK, output)
 }
 
+// ListCoverTypes handles the GET request to list cover types
+func (h *PresentationHandlersImpl) ListCoverTypes(ctx *gin.Context) {
+	queryParams := ctx.Request.URL.Query()
+
+	pageSizeStr := queryParams.Get("page_size")
+	page := queryParams.Get("page")
+
+	if page == "" || pageSizeStr == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusExpectationFailed,
+			"message": "List may be very large. Please provide pagination information"})
+
+		return
+	}
+
+	pageSize, err := strconv.ParseInt(pageSizeStr, 10, 64)
+	if err != nil {
+		jsonErrorResponse(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	pageNumber, err := strconv.ParseInt(page, 10, 64)
+	if err != nil {
+		jsonErrorResponse(ctx, http.StatusBadRequest, err)
+		return
+	}
+
+	if pageSize <= 0 {
+		pageSize = 10
+	}
+
+	if pageNumber <= 0 {
+		pageNumber = 1
+	}
+
+	pagination := &domain.Pagination{
+		PageSize: pageSize,
+		Page:     pageNumber,
+	}
+
+	output, err := h.usecase.ListCoverTypes(ctx.Request.Context(), pagination)
+	if err != nil {
+		jsonErrorResponse(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, output)
+}
+
 func jsonErrorResponse(c *gin.Context, statusCode int, err error) {
-	c.AbortWithStatusJSON(statusCode, gin.H{"error": err.Error()})
+	c.AbortWithStatusJSON(statusCode, gin.H{
+		"error": err.Error(),
+	})
 }

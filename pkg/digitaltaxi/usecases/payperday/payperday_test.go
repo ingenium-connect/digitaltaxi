@@ -81,3 +81,55 @@ func TestPayPerDay_CreateCoverType(t *testing.T) {
 		})
 	}
 }
+
+func TestPayPerDay_ListCoverTypes(t *testing.T) {
+	type args struct {
+		ctx        context.Context
+		pagination *domain.Pagination
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Happy case: list cover types",
+			args: args{
+				ctx: context.Background(),
+				pagination: &domain.Pagination{
+					Page:     1,
+					PageSize: 10,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Sad case: unable to list cover types",
+			args: args{
+				ctx: context.Background(),
+				pagination: &domain.Pagination{
+					Page:     1,
+					PageSize: 10,
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			payperday, mock := setupMocks()
+
+			if tt.name == "Sad case: unable to list cover types" {
+				mock.DataStoreMock.MockListCoverTypesFn = func(ctx context.Context, pagination *domain.Pagination) (*domain.CoverTypeResponse, error) {
+					return nil, fmt.Errorf("an error occurred while listing cover types")
+				}
+			}
+
+			_, err := payperday.ListCoverTypes(tt.args.ctx, tt.args.pagination)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("PayPerDay.ListCoverTypes() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}

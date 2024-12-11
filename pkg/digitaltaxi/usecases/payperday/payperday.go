@@ -34,3 +34,8 @@ func (p *PayPerDay) CreateCoverType(ctx context.Context, coverTypeInput *dto.Cov
 
 	return p.infrastructure.Repository.CreateCoverType(ctx, coverType)
 }
+
+// ListCoverTypes returns a paginated collection of cover types
+func (p *PayPerDay) ListCoverTypes(ctx context.Context, pagination *domain.Pagination) (*domain.CoverTypeResponse, error) {
+	return p.infrastructure.Repository.ListCoverTypes(ctx, pagination)
+}

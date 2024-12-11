@@ -13,6 +13,7 @@ type Create interface {
 
 // Query hold a collection of methods to interact with the querying of any data
 type Query interface {
+	ListCoverTypes(ctx context.Context, pagination *domain.Pagination) (*domain.CoverTypeResponse, error)
 }
 
 // Update is a collection of methods with the ability to update any data
