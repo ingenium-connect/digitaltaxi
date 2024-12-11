@@ -20,3 +20,9 @@ type Pricing struct {
 	CoverTypeID primitive.ObjectID `json:"covertype_id" bson:"covertype_id" binding:"required"`
 	Price       float64            `json:"price" bson:"price" binding:"required"`
 }
+
+// CoverTypeResponse used to return the cover types
+type CoverTypeResponse struct {
+	CoverTypes []*CoverType `json:"coverTypes"`
+	TotalCount int64        `json:"totalCount"`
+}

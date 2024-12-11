@@ -133,6 +133,7 @@ func StartGinRouter(ctx context.Context, engine *gin.Engine) error {
 	coverTypes := v1.Group("cover-types")
 	{
 		coverTypes.POST("", handlers.CreateCoverType)
+		coverTypes.GET("", handlers.ListCoverTypes)
 	}
 
 	return nil
