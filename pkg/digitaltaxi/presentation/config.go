@@ -128,7 +128,7 @@ func StartGinRouter(ctx context.Context, engine *gin.Engine) error {
 
 	handlers := rest.NewPresentationHandlers(*usecases)
 
-	v1 := engine.Group("/api/v1")
+	v1 := engine.Group("/api/v1/")
 
 	coverTypes := v1.Group("cover-types")
 	{
@@ -140,6 +140,16 @@ func StartGinRouter(ctx context.Context, engine *gin.Engine) error {
 	{
 		productRatesGroup.POST("", handlers.CreateProductRate)
 		productRatesGroup.GET("", handlers.ListProductRates)
+	}
+
+	purchaseGroup := v1.Group("purchase")
+	{
+		purchaseGroup.GET("/premium-amount", handlers.GetPremiumAmount)
+	}
+
+	userGroup := v1.Group("users")
+	{
+		userGroup.POST("/register", handlers.RegisterNewUser)
 	}
 
 	return nil

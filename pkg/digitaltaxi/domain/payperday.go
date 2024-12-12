@@ -20,13 +20,13 @@ type CoverTypeResponse struct {
 }
 
 type ProductRate struct {
-	ID          string  `json:"id,omitempty"`
-	ProductID   string  `json:"product_id,omitempty"`
-	CoverTypeID string  `json:"covertype_id,omitempty"`
-	Rate        float64 `json:"rate,omitempty"`
+	ID          string              `json:"id,omitempty"`
+	CoverTypeID string              `json:"covertype_id,omitempty"`
+	Rate        float64             `json:"rate,omitempty"`
+	Product     *UnderwriterProduct `json:"product,omitempty"`
 }
 
 type ProductRateResponse struct {
-	Rates      []*ProductRate `json:"pricings,omitempty"`
-	TotalCount int64          `json:"totalCount,omitempty"`
+	Rates      []*ProductRate `json:"rates,omitempty"`
+	TotalCount int64          `json:"total_count,omitempty"`
 }
