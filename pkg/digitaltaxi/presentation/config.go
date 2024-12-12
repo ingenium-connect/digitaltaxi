@@ -136,5 +136,11 @@ func StartGinRouter(ctx context.Context, engine *gin.Engine) error {
 		coverTypes.GET("", handlers.ListCoverTypes)
 	}
 
+	productRatesGroup := v1.Group("product-rate")
+	{
+		productRatesGroup.POST("", handlers.CreateProductRate)
+		productRatesGroup.GET("", handlers.ListProductRates)
+	}
+
 	return nil
 }

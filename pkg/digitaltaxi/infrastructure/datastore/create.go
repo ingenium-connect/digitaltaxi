@@ -5,10 +5,13 @@ import (
 
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/domain"
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/infrastructure/datastore/mongodb"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
-	coverTypeCollectionName = "cover_type"
+	coverTypeCollectionName          = "cover_type"
+	productRateCollectionName        = "product_rate"
+	underwriterProductCollectionName = "underwriter_products"
 )
 
 func (s *DBImpl) CreateCoverType(ctx context.Context, coverType *domain.CoverType) (*domain.CoverType, error) {
@@ -24,6 +27,34 @@ func (s *DBImpl) CreateCoverType(ctx context.Context, coverType *domain.CoverTyp
 	}
 
 	return &domain.CoverType{
+		ID: output.ID.Hex(),
+	}, nil
+}
+
+// CreateProductRate is used to create a new pricing
+func (s *DBImpl) CreateProductRate(ctx context.Context, rate *domain.ProductRate) (*domain.ProductRate, error) {
+	productID, err := primitive.ObjectIDFromHex(rate.ProductID)
+	if err != nil {
+		return nil, err
+	}
+
+	coverTypeID, err := primitive.ObjectIDFromHex(rate.CoverTypeID)
+	if err != nil {
+		return nil, err
+	}
+
+	payload := &mongodb.ProductRate{
+		ProductID:   productID,
+		CoverTypeID: coverTypeID,
+		Rate:        rate.Rate,
+	}
+
+	output, err := s.MongoDB.CreateProductRate(ctx, productRateCollectionName, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.ProductRate{
 		ID: output.ID.Hex(),
 	}, nil
 }
