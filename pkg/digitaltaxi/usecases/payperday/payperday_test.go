@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/brianvoe/gofakeit"
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/application/dto"
@@ -297,6 +298,99 @@ func TestPayPerDay_CreateProductRate(t *testing.T) {
 			_, err := payperday.CreateProductRate(tt.args.ctx, tt.args.productRateInput)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PayPerDay.CreateProductRate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestPayPerDay_RegisterNewVehicle(t *testing.T) {
+	type args struct {
+		ctx            context.Context
+		vehiclePayload *dto.VehicleInput
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Happy case: register new vehicle",
+			args: args{
+				ctx: context.Background(),
+				vehiclePayload: &dto.VehicleInput{
+					ChassisNumber:      "123",
+					RegistrationNumber: "123",
+					Make:               "Toyota",
+					Model:              "Camry",
+					Date:               time.Now().Format(time.DateOnly),
+					Owner:              gofakeit.UUID(),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Sad case: unable to register new vehicle - owner is not registered",
+			args: args{
+				ctx: context.Background(),
+				vehiclePayload: &dto.VehicleInput{
+					ChassisNumber:      "123",
+					RegistrationNumber: "123",
+					Make:               "Toyota",
+					Model:              "Camry",
+					Date:               time.Now().Format(time.DateOnly),
+					Owner:              gofakeit.UUID(),
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Sad case: unable to register new vehicle",
+			args: args{
+				ctx: context.Background(),
+				vehiclePayload: &dto.VehicleInput{
+					ChassisNumber: "123",
+					Make:          "Toyota",
+					Model:         "Camry",
+					Date:          time.Now().Format(time.DateOnly),
+					Owner:         gofakeit.UUID(),
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Sad case: unable to register new vehicle (no chassis number)",
+			args: args{
+				ctx: context.Background(),
+				vehiclePayload: &dto.VehicleInput{
+					RegistrationNumber: "123",
+					Make:               "Toyota",
+					Model:              "Camry",
+					Date:               time.Now().Format(time.DateOnly),
+					Owner:              gofakeit.UUID(),
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			payperday, mock := setupMocks()
+
+			if tt.name == "Sad case: unable to register new vehicle" {
+				mock.DataStoreMock.MockRegisterNewVehicleFn = func(ctx context.Context, vehicleInformation *domain.VehicleInformation) (*domain.VehicleInformation, error) {
+					return nil, fmt.Errorf("an error occurred while registering new vehicle")
+				}
+			}
+			if tt.name == "Sad case: unable to register new vehicle - owner is not registered" {
+				mock.DataStoreMock.MockGetUserByIDFn = func(ctx context.Context, id string) (*domain.User, error) {
+					return nil, fmt.Errorf("failed to register new vehicle. Owner is not registered")
+				}
+			}
+
+			_, err := payperday.RegisterNewVehicle(tt.args.ctx, tt.args.vehiclePayload)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("PayPerDay.RegisterNewVehicle() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 		})

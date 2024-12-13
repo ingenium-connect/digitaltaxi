@@ -13,6 +13,7 @@ var (
 	productRateCollectionName        = "product_rate"
 	underwriterProductCollectionName = "underwriter_products"
 	usersCollectionName              = "users"
+	vehicleCollectionName            = "vehicle"
 )
 
 func (s *DBImpl) CreateCoverType(ctx context.Context, coverType *domain.CoverType) (*domain.CoverType, error) {
@@ -82,6 +83,31 @@ func (s *DBImpl) RegisterNewUser(ctx context.Context, user *domain.User) (*domai
 	}
 
 	return &domain.User{
+		ID: output.ID.Hex(),
+	}, nil
+}
+
+// RegisterNewVehicle registers a new vehicle
+func (s *DBImpl) RegisterNewVehicle(ctx context.Context, vehicleInformation *domain.VehicleInformation) (*domain.VehicleInformation, error) {
+	ownerID, err := primitive.ObjectIDFromHex(vehicleInformation.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	payload := &mongodb.VehicleInformation{
+		ChassisNumber: vehicleInformation.ChassisNumber,
+		Make:          vehicleInformation.Make,
+		Model:         vehicleInformation.Model,
+		Date:          *vehicleInformation.Date,
+		Owner:         ownerID,
+	}
+
+	output, err := s.MongoDB.RegisterNewVehicle(ctx, vehicleCollectionName, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.VehicleInformation{
 		ID: output.ID.Hex(),
 	}, nil
 }

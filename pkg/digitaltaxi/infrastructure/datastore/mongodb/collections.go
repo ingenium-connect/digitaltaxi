@@ -76,3 +76,13 @@ type User struct {
 	UpdatedAt                            time.Time          `json:"updated_at" bson:"updated_at"`
 	HasPaidFirstMonthlyInstallmentInFull bool               `json:"has_paid_first_month_in_full" bson:"has_paid_first_month_in_full" binding:"required"`
 }
+
+type VehicleInformation struct {
+	ID                 primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	ChassisNumber      string             `json:"chassis_number,omitempty" bson:"chassis_number" binding:"required"`
+	RegistrationNumber string             `json:"registration_number,omitempty" bson:"registration_number" binding:"required"`
+	Make               string             `json:"make,omitempty" bson:"make" binding:"required"`
+	Model              string             `json:"model,omitempty" bson:"model" binding:"required"`
+	Date               time.Time          `json:"date,omitempty" bson:"date" binding:"required"`
+	Owner              primitive.ObjectID `json:"owner,omitempty" bson:"owner" binding:"required"`
+}

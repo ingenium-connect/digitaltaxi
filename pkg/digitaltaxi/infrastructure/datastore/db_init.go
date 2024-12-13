@@ -16,6 +16,8 @@ type MongoDBImplementation interface {
 	GetUnderwriterProductByID(ctx context.Context, collectionName, id string) (*mongodb.UnderwriterProduct, error)
 	GetProductRateByCoverID(ctx context.Context, collectionName, id string) (*mongodb.ProductRate, error)
 	RegisterNewUser(ctx context.Context, collectionName string, user *mongodb.User) (*mongodb.User, error)
+	RegisterNewVehicle(ctx context.Context, collectionName string, vehicleInformation *mongodb.VehicleInformation) (*mongodb.VehicleInformation, error)
+	GetUserByID(ctx context.Context, collectionName, id string) (*mongodb.User, error)
 }
 
 type DBImpl struct {

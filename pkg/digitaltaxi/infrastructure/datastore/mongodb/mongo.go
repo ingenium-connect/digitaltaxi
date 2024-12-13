@@ -231,3 +231,46 @@ func (m *MongoDBClientImpl) RegisterNewUser(ctx context.Context, collectionName 
 		ID: result.InsertedID.(primitive.ObjectID),
 	}, nil
 }
+
+// RegisterNewVehicle is used to register a new vehicle
+func (m *MongoDBClientImpl) RegisterNewVehicle(ctx context.Context, collectionName string, vehicleInformation *VehicleInformation) (*VehicleInformation, error) {
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "chassis_number", Value: 1},
+			{Key: "registration_number", Value: 1},
+		},
+		Options: options.Index().SetUnique(true),
+	}
+
+	if _, err := m.client.Collection(collectionName).Indexes().CreateOne(ctx, indexModel); err != nil {
+		return nil, fmt.Errorf("unable to create index %w", err)
+	}
+
+	result, err := m.client.Collection(collectionName).InsertOne(ctx, vehicleInformation)
+	if err != nil {
+		return nil, err
+	}
+
+	return &VehicleInformation{
+		ID: result.InsertedID.(primitive.ObjectID),
+	}, nil
+}
+
+// GetUserByID is used to retrieve user information
+func (m *MongoDBClientImpl) GetUserByID(ctx context.Context, collectionName, id string) (*User, error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	user := &User{}
+
+	err = m.client.Collection(collectionName).FindOne(ctx, bson.M{"_id": objID}).Decode(user)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, fmt.Errorf("no documents found")
+	} else if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}

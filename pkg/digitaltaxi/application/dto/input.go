@@ -46,3 +46,20 @@ func (u UserInput) Validate() error {
 
 	return err
 }
+
+// VehicleInput is used to create a new vehicle
+type VehicleInput struct {
+	ChassisNumber      string `json:"chassis_number" validate:"required"`
+	RegistrationNumber string `json:"registration_number" validate:"required"`
+	Make               string `json:"make" validate:"required"`
+	Model              string `json:"model" validate:"required"`
+	Date               string `json:"date" validate:"required"`
+	Owner              string `json:"owner" validate:"required"`
+}
+
+func (vi VehicleInput) Validate() error {
+	v := validator.New()
+	err := v.Struct(vi)
+
+	return err
+}
