@@ -43,7 +43,7 @@ func (e *CoverType) UnmarshalGQL(v interface{}) error {
 
 	*e = CoverType(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid task status", str)
+		return fmt.Errorf("%s is not a valid cover type", str)
 	}
 
 	return nil
@@ -51,5 +51,54 @@ func (e *CoverType) UnmarshalGQL(v interface{}) error {
 
 // MarshalGQL writes the task status to the supplied writer as a quoted string
 func (t CoverType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(t.String()))
+}
+
+type CoverPeriod string
+
+const (
+	DailyCover   CoverPeriod = "DAILY"
+	MonthlyCover CoverPeriod = "MONTHLY"
+	AnnualCover  CoverPeriod = "ANNUAL"
+)
+
+var AllCoverPeriods = []CoverPeriod{
+	DailyCover,
+	MonthlyCover,
+	AnnualCover,
+}
+
+// IsValid ...
+func (t CoverPeriod) IsValid() bool {
+	switch t {
+	case DailyCover, MonthlyCover, AnnualCover:
+		return true
+	}
+
+	return false
+}
+
+// String ...
+func (t CoverPeriod) String() string {
+	return string(t)
+}
+
+// UnmarshalGQL ...
+func (e *CoverPeriod) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CoverPeriod(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid cover period", str)
+	}
+
+	return nil
+}
+
+// MarshalGQL writes the task status to the supplied writer as a quoted string
+func (t CoverPeriod) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(t.String()))
 }

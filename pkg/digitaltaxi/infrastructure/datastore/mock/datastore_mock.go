@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"time"
 
 	"github.com/brianvoe/gofakeit"
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/application/enums"
@@ -15,6 +16,8 @@ type DataStoreMock struct {
 	MockListProductRatesFn          func(ctx context.Context, pagination *domain.Pagination) (*domain.ProductRateResponse, error)
 	MockGetCoverTypeByIDFn          func(ctx context.Context, id string) (*domain.CoverType, error)
 	MockGetUnderwriterProductByIDFn func(ctx context.Context, id string) (*domain.UnderwriterProduct, error)
+	MockGetProductRateByCoverIDFn   func(ctx context.Context, id string) (*domain.ProductRate, error)
+	MockRegisterNewUserFn           func(ctx context.Context, user *domain.User) (*domain.User, error)
 }
 
 func NewDataStoreMock() *DataStoreMock {
@@ -48,8 +51,10 @@ func NewDataStoreMock() *DataStoreMock {
 		},
 		MockCreateProductRateFn: func(ctx context.Context, pricing *domain.ProductRate) (*domain.ProductRate, error) {
 			return &domain.ProductRate{
-				ID:          gofakeit.UUID(),
-				ProductID:   gofakeit.UUID(),
+				ID: gofakeit.UUID(),
+				Product: &domain.UnderwriterProduct{
+					ID: gofakeit.UUID(),
+				},
 				CoverTypeID: gofakeit.UUID(),
 				Rate:        10.0,
 			}, nil
@@ -58,14 +63,18 @@ func NewDataStoreMock() *DataStoreMock {
 			return &domain.ProductRateResponse{
 				Rates: []*domain.ProductRate{
 					{
-						ID:          gofakeit.UUID(),
-						ProductID:   gofakeit.UUID(),
+						ID: gofakeit.UUID(),
+						Product: &domain.UnderwriterProduct{
+							ID: gofakeit.UUID(),
+						},
 						CoverTypeID: gofakeit.UUID(),
 						Rate:        10.0,
 					},
 					{
-						ID:          gofakeit.UUID(),
-						ProductID:   gofakeit.UUID(),
+						ID: gofakeit.UUID(),
+						Product: &domain.UnderwriterProduct{
+							ID: gofakeit.UUID(),
+						},
 						CoverTypeID: gofakeit.UUID(),
 						Rate:        15.0,
 					},
@@ -90,6 +99,32 @@ func NewDataStoreMock() *DataStoreMock {
 				Description:     gofakeit.HipsterSentence(20),
 				UnderwriterId:   gofakeit.UUID(),
 				IsActive:        true,
+			}, nil
+		},
+		MockGetProductRateByCoverIDFn: func(ctx context.Context, id string) (*domain.ProductRate, error) {
+			return &domain.ProductRate{
+				ID: gofakeit.UUID(),
+				Product: &domain.UnderwriterProduct{
+					ID: gofakeit.UUID(),
+				},
+				CoverTypeID: gofakeit.UUID(),
+				Rate:        10.0,
+			}, nil
+		},
+		MockRegisterNewUserFn: func(ctx context.Context, user *domain.User) (*domain.User, error) {
+			return &domain.User{
+				ID:          gofakeit.UUID(),
+				Name:        "",
+				MSISDN:      "",
+				IDNumber:    "",
+				Email:       "",
+				KRAPIN:      "",
+				Password:    "",
+				IsActive:    false,
+				IsAgent:     false,
+				FCMKey:      "",
+				DateCreated: &time.Time{},
+				UpdatedAt:   &time.Time{},
 			}, nil
 		},
 	}
@@ -123,4 +158,14 @@ func (m *DataStoreMock) GetCoverTypeByID(ctx context.Context, id string) (*domai
 // GetUnderwriterProductByID mocks the implementation of getting underwriter product by id
 func (m *DataStoreMock) GetUnderwriterProductByID(ctx context.Context, id string) (*domain.UnderwriterProduct, error) {
 	return m.MockGetUnderwriterProductByIDFn(ctx, id)
+}
+
+// GetProductRateByCoverID mocks the implementation of getting product rate by cover type id
+func (m *DataStoreMock) GetProductRateByCoverID(ctx context.Context, id string) (*domain.ProductRate, error) {
+	return m.MockGetProductRateByCoverIDFn(ctx, id)
+}
+
+// RegisterNewUser mocks the implementation of registering new user
+func (m *DataStoreMock) RegisterNewUser(ctx context.Context, user *domain.User) (*domain.User, error) {
+	return m.MockRegisterNewUserFn(ctx, user)
 }

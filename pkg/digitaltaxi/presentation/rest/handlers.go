@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/application/dto"
+	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/application/enums"
 	"github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/domain"
 	digitaltaxi "github.com/ingenium-connect/digitaltaxi/pkg/digitaltaxi/usecases/payperday"
 )
@@ -151,6 +152,53 @@ func (h *PresentationHandlersImpl) ListProductRates(c *gin.Context) {
 	}
 
 	output, err := h.usecase.ListProductRates(c.Request.Context(), pagination)
+	if err != nil {
+		jsonErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, output)
+}
+
+func (h *PresentationHandlersImpl) GetPremiumAmount(c *gin.Context) {
+	queryParams := c.Request.URL.Query()
+
+	period := queryParams.Get("period")
+	vehicleValue := queryParams.Get("vehicle_value")
+	coverTypeID := queryParams.Get("covertype_id")
+
+	if period == "" || vehicleValue == "" || coverTypeID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Missing required parameters"})
+
+		return
+	}
+
+	input := dto.PurchaseCoverInput{
+		CoverTypeID:  coverTypeID,
+		VehicleValue: vehicleValue,
+		Period:       enums.CoverPeriod(period),
+	}
+
+	output, err := h.usecase.CalculatePremiumAmount(c.Request.Context(), input)
+	if err != nil {
+		jsonErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, output)
+}
+
+func (h *PresentationHandlersImpl) RegisterNewUser(c *gin.Context) {
+	input := &dto.UserInput{}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		jsonErrorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	output, err := h.usecase.RegisterNewUser(c.Request.Context(), input)
 	if err != nil {
 		jsonErrorResponse(c, http.StatusInternalServerError, err)
 		return

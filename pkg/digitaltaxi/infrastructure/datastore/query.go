@@ -37,10 +37,26 @@ func (s *DBImpl) ListProductRates(ctx context.Context, pagination *domain.Pagina
 	}
 
 	var productRates []*domain.ProductRate
+
 	for _, rate := range result.Rates {
+		underwriterProduct, err := s.MongoDB.GetUnderwriterProductByID(ctx, underwriterProductCollectionName, rate.ProductID.Hex())
+		if err != nil {
+			return nil, err
+		}
+
 		productRates = append(productRates, &domain.ProductRate{
-			ID:          rate.ID.Hex(),
-			ProductID:   rate.ProductID.Hex(),
+			ID: rate.ID.Hex(),
+			Product: &domain.UnderwriterProduct{
+				ID:              underwriterProduct.ID.Hex(),
+				Type:            underwriterProduct.Type,
+				UnderwriterName: underwriterProduct.UnderwriterName,
+				Name:            underwriterProduct.Name,
+				Description:     underwriterProduct.Description,
+				HasTonnage:      underwriterProduct.HasTonnage,
+				HasSeats:        underwriterProduct.HasSeats,
+				UnderwriterId:   underwriterProduct.UnderwriterId.Hex(),
+				IsActive:        underwriterProduct.IsActive,
+			},
 			CoverTypeID: rate.CoverTypeID.Hex(),
 			Rate:        rate.Rate,
 		})
@@ -83,5 +99,34 @@ func (s *DBImpl) GetUnderwriterProductByID(ctx context.Context, id string) (*dom
 		HasTonnage:      product.HasTonnage,
 		UnderwriterId:   product.UnderwriterId.Hex(),
 		IsActive:        product.IsActive,
+	}, nil
+}
+
+func (s *DBImpl) GetProductRateByCoverID(ctx context.Context, id string) (*domain.ProductRate, error) {
+	rate, err := s.MongoDB.GetProductRateByCoverID(ctx, productRateCollectionName, id)
+	if err != nil {
+		return nil, err
+	}
+
+	underwriterProduct, err := s.MongoDB.GetUnderwriterProductByID(ctx, underwriterProductCollectionName, rate.ProductID.Hex())
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.ProductRate{
+		ID: rate.ID.Hex(),
+		Product: &domain.UnderwriterProduct{
+			ID:              underwriterProduct.ID.Hex(),
+			Type:            underwriterProduct.Type,
+			UnderwriterName: underwriterProduct.UnderwriterName,
+			Name:            underwriterProduct.Name,
+			Description:     underwriterProduct.Description,
+			HasTonnage:      underwriterProduct.HasTonnage,
+			HasSeats:        underwriterProduct.HasSeats,
+			UnderwriterId:   underwriterProduct.UnderwriterId.Hex(),
+			IsActive:        underwriterProduct.IsActive,
+		},
+		CoverTypeID: rate.CoverTypeID.Hex(),
+		Rate:        rate.Rate,
 	}, nil
 }

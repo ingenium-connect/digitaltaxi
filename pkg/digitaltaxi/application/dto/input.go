@@ -17,14 +17,32 @@ type ProductRateInput struct {
 	Rate        float64 `json:"rate"`
 }
 
-type PurchaseCover struct {
-	CoverID      string `json:"cover_id" validate:"required"`
-	VehicleValue string `json:"vehicle_value" validate:"required"`
+type PurchaseCoverInput struct {
+	CoverTypeID  string            `json:"covertype_id" validate:"required"`
+	VehicleValue string            `json:"vehicle_value" validate:"required"`
+	Period       enums.CoverPeriod `json:"period" validate:"required"`
 }
 
-func (pc PurchaseCover) Validate() error {
+func (pc PurchaseCoverInput) Validate() error {
 	v := validator.New()
 	err := v.Struct(pc)
+
+	return err
+}
+
+// UserInput is used to register a new user
+type UserInput struct {
+	Name     string `json:"name" validate:"required"`
+	MSISDN   string `json:"msisdn" validate:"required"`
+	IDNumber string `json:"id_number" validate:"required"`
+	Email    string `json:"email" validate:"required"`
+	KRAPIN   string `json:"kra_pin" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
+func (u UserInput) Validate() error {
+	v := validator.New()
+	err := v.Struct(u)
 
 	return err
 }

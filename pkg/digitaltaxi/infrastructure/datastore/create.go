@@ -12,6 +12,7 @@ var (
 	coverTypeCollectionName          = "cover_type"
 	productRateCollectionName        = "product_rate"
 	underwriterProductCollectionName = "underwriter_products"
+	usersCollectionName              = "users"
 )
 
 func (s *DBImpl) CreateCoverType(ctx context.Context, coverType *domain.CoverType) (*domain.CoverType, error) {
@@ -33,7 +34,7 @@ func (s *DBImpl) CreateCoverType(ctx context.Context, coverType *domain.CoverTyp
 
 // CreateProductRate is used to create a new pricing
 func (s *DBImpl) CreateProductRate(ctx context.Context, rate *domain.ProductRate) (*domain.ProductRate, error) {
-	productID, err := primitive.ObjectIDFromHex(rate.ProductID)
+	productID, err := primitive.ObjectIDFromHex(rate.Product.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -55,6 +56,32 @@ func (s *DBImpl) CreateProductRate(ctx context.Context, rate *domain.ProductRate
 	}
 
 	return &domain.ProductRate{
+		ID: output.ID.Hex(),
+	}, nil
+}
+
+// RegisterNewUser is used to register a new user
+func (s *DBImpl) RegisterNewUser(ctx context.Context, user *domain.User) (*domain.User, error) {
+	payload := &mongodb.User{
+		Name:                                 user.Name,
+		MSISDN:                               user.MSISDN,
+		IDNumber:                             user.IDNumber,
+		Email:                                user.Email,
+		KRAPIN:                               user.KRAPIN,
+		Password:                             user.Password,
+		IsActive:                             user.IsActive,
+		IsAgent:                              false,
+		DateCreated:                          *user.DateCreated,
+		UpdatedAt:                            *user.DateCreated,
+		HasPaidFirstMonthlyInstallmentInFull: user.HasPaidFirstMonthlyInstallmentInFull,
+	}
+
+	output, err := s.MongoDB.RegisterNewUser(ctx, usersCollectionName, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.User{
 		ID: output.ID.Hex(),
 	}, nil
 }

@@ -59,3 +59,20 @@ type UnderwriterProduct struct {
 	NumberofInstallment int                  `json:"number_of_installment" bson:"number_of_installment" `
 	HasInstallment      bool                 `json:"has_installment" bson:"has_installment" `
 }
+
+type User struct {
+	ID                                   primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Name                                 string             `json:"name" bson:"name" binding:"required"`
+	MSISDN                               string             `json:"msisdn" bson:"msisdn" binding:"required"`
+	IDNumber                             string             `json:"id_number" bson:"id_number"`
+	Email                                string             `json:"email" bson:"email" binding:"required"`
+	KRAPIN                               string             `json:"kra_pin" bson:"kra_pin" binding:"required"`
+	Password                             string             `json:"-" bson:"password" binding:"required"`
+	IsActive                             bool               `json:"is_active" bson:"is_active" binding:"required"`
+	IsAgent                              bool               `json:"is_agent" bson:"is_agent" binding:"required"`
+	FCMKey                               string             `json:"fcm_key" bson:"fcm_key" `
+	Channel                              string             `json:"channel" bson:"channel"`
+	DateCreated                          time.Time          `json:"date_created" bson:"date_created"`
+	UpdatedAt                            time.Time          `json:"updated_at" bson:"updated_at"`
+	HasPaidFirstMonthlyInstallmentInFull bool               `json:"has_paid_first_month_in_full" bson:"has_paid_first_month_in_full" binding:"required"`
+}

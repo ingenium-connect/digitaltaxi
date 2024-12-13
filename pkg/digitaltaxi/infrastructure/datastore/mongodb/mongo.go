@@ -187,3 +187,47 @@ func (m *MongoDBClientImpl) GetUnderwriterProductByID(ctx context.Context, colle
 
 	return product, nil
 }
+
+func (m *MongoDBClientImpl) GetProductRateByCoverID(ctx context.Context, collectionName, id string) (*ProductRate, error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	productRate := &ProductRate{}
+
+	err = m.client.Collection(collectionName).FindOne(ctx, bson.M{"covertype_id": objID}).Decode(productRate)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, fmt.Errorf("no documents found")
+	} else if err != nil {
+		return nil, err
+	}
+
+	return productRate, nil
+}
+
+// RegisterNewUser is used to register a new user
+func (m *MongoDBClientImpl) RegisterNewUser(ctx context.Context, collectionName string, user *User) (*User, error) {
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "msisdn", Value: 1},
+			{Key: "id_number", Value: 1},
+			{Key: "email", Value: 1},
+			{Key: "kra_pin", Value: 1},
+		},
+		Options: options.Index().SetUnique(true),
+	}
+
+	if _, err := m.client.Collection(collectionName).Indexes().CreateOne(ctx, indexModel); err != nil {
+		return nil, fmt.Errorf("unable to create index %w", err)
+	}
+
+	result, err := m.client.Collection(collectionName).InsertOne(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &User{
+		ID: result.InsertedID.(primitive.ObjectID),
+	}, nil
+}
