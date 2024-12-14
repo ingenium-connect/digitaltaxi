@@ -156,3 +156,52 @@ func (p *PayPerDay) RegisterNewUser(ctx context.Context, userPayload *dto.UserIn
 
 	return p.infrastructure.Repository.RegisterNewUser(ctx, payload)
 }
+
+// RegisterNewVehicle is used to register new vehicle
+func (p *PayPerDay) RegisterNewVehicle(ctx context.Context, vehiclePayload *dto.VehicleInput) (*domain.VehicleInformation, error) {
+	err := vehiclePayload.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("incomplete vehicle input: %w", err)
+	}
+
+	// TODO: Get the owner from the user_id imbued in the request context
+	user, err := p.infrastructure.Repository.GetUserByID(ctx, vehiclePayload.Owner)
+	if err != nil {
+		return nil, fmt.Errorf("the car owner does not exist as a user: %w", err)
+	}
+
+	formattedDate, err := time.Parse(time.DateOnly, vehiclePayload.Date)
+	if err != nil {
+		return nil, fmt.Errorf("invalid date format: %w", err)
+	}
+
+	vehicleDetails := &domain.VehicleInformation{
+		ChassisNumber:      vehiclePayload.ChassisNumber,
+		RegistrationNumber: vehiclePayload.RegistrationNumber,
+		Make:               vehiclePayload.Make,
+		Model:              vehiclePayload.Model,
+		Date:               &formattedDate,
+		Owner:              user.ID,
+	}
+
+	return p.infrastructure.Repository.RegisterNewVehicle(ctx, vehicleDetails)
+}
+
+// GetUserProfileByUserID returns a user profile
+func (p *PayPerDay) GetUserProfileByUserID(ctx context.Context, userID string) (*domain.User, error) {
+	user, err := p.infrastructure.Repository.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+
+	return &domain.User{
+		ID:       user.ID,
+		Name:     user.Name,
+		MSISDN:   user.MSISDN,
+		IDNumber: user.IDNumber,
+		Email:    user.Email,
+		KRAPIN:   user.KRAPIN,
+		IsAgent:  user.IsAgent,
+		IsActive: user.IsActive,
+	}, nil
+}

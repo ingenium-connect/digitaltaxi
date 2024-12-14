@@ -152,5 +152,12 @@ func StartGinRouter(ctx context.Context, engine *gin.Engine) error {
 		userGroup.POST("/register", handlers.RegisterNewUser)
 	}
 
+	vehicleGroup := v1.Group("vehicle")
+	// TODO: RE-STORE LATER
+	// vehicleGroup.Use(rest.AuthenticationGinMiddleware(*usecases))
+	{
+		vehicleGroup.POST("", handlers.RegisterNewVehicle)
+	}
+
 	return nil
 }

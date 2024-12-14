@@ -207,6 +207,23 @@ func (h *PresentationHandlersImpl) RegisterNewUser(c *gin.Context) {
 	c.JSON(http.StatusOK, output)
 }
 
+func (h *PresentationHandlersImpl) RegisterNewVehicle(c *gin.Context) {
+	input := &dto.VehicleInput{}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		jsonErrorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	output, err := h.usecase.RegisterNewVehicle(c.Request.Context(), input)
+	if err != nil {
+		jsonErrorResponse(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, output)
+}
+
 func jsonErrorResponse(c *gin.Context, statusCode int, err error) {
 	c.AbortWithStatusJSON(statusCode, gin.H{
 		"error": err.Error(),

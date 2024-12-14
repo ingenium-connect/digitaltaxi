@@ -130,3 +130,23 @@ func (s *DBImpl) GetProductRateByCoverID(ctx context.Context, id string) (*domai
 		Rate:        rate.Rate,
 	}, nil
 }
+
+// GetUserByID is used to retrieve user information from the database
+func (s *DBImpl) GetUserByID(ctx context.Context, id string) (*domain.User, error) {
+	user, err := s.MongoDB.GetUserByID(ctx, usersCollectionName, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.User{
+		ID:                                   user.ID.Hex(),
+		Name:                                 user.Name,
+		MSISDN:                               user.MSISDN,
+		IDNumber:                             user.IDNumber,
+		Email:                                user.Email,
+		KRAPIN:                               user.KRAPIN,
+		IsActive:                             user.IsActive,
+		IsAgent:                              user.IsAgent,
+		HasPaidFirstMonthlyInstallmentInFull: user.HasPaidFirstMonthlyInstallmentInFull,
+	}, nil
+}

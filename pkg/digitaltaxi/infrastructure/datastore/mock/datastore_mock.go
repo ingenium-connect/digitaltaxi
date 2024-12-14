@@ -18,6 +18,8 @@ type DataStoreMock struct {
 	MockGetUnderwriterProductByIDFn func(ctx context.Context, id string) (*domain.UnderwriterProduct, error)
 	MockGetProductRateByCoverIDFn   func(ctx context.Context, id string) (*domain.ProductRate, error)
 	MockRegisterNewUserFn           func(ctx context.Context, user *domain.User) (*domain.User, error)
+	MockRegisterNewVehicleFn        func(ctx context.Context, vehicleInformation *domain.VehicleInformation) (*domain.VehicleInformation, error)
+	MockGetUserByIDFn               func(ctx context.Context, id string) (*domain.User, error)
 }
 
 func NewDataStoreMock() *DataStoreMock {
@@ -127,6 +129,22 @@ func NewDataStoreMock() *DataStoreMock {
 				UpdatedAt:   &time.Time{},
 			}, nil
 		},
+		MockRegisterNewVehicleFn: func(ctx context.Context, vehicleInformation *domain.VehicleInformation) (*domain.VehicleInformation, error) {
+			return &domain.VehicleInformation{
+				ID:            gofakeit.UUID(),
+				ChassisNumber: gofakeit.Sentence(10),
+				Make:          gofakeit.BeerName(),
+				Model:         gofakeit.BeerName(),
+				Date:          &time.Time{},
+				Owner:         gofakeit.UUID(),
+			}, nil
+		},
+		MockGetUserByIDFn: func(ctx context.Context, id string) (*domain.User, error) {
+			return &domain.User{
+				ID:   gofakeit.UUID(),
+				Name: gofakeit.Name(),
+			}, nil
+		},
 	}
 }
 
@@ -168,4 +186,14 @@ func (m *DataStoreMock) GetProductRateByCoverID(ctx context.Context, id string) 
 // RegisterNewUser mocks the implementation of registering new user
 func (m *DataStoreMock) RegisterNewUser(ctx context.Context, user *domain.User) (*domain.User, error) {
 	return m.MockRegisterNewUserFn(ctx, user)
+}
+
+// RegisterNewVehicle mocks the implementation of registering new vehicle
+func (m *DataStoreMock) RegisterNewVehicle(ctx context.Context, vehicleInformation *domain.VehicleInformation) (*domain.VehicleInformation, error) {
+	return m.MockRegisterNewVehicleFn(ctx, vehicleInformation)
+}
+
+// MockGetUserByID mocks the implementation of getting user information
+func (m *DataStoreMock) GetUserByID(ctx context.Context, id string) (*domain.User, error) {
+	return m.MockGetUserByIDFn(ctx, id)
 }
